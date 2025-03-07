@@ -5,16 +5,23 @@ FROM ubuntu:22.04
 RUN apt update -y && apt upgrade -y && \
     apt install -y curl sudo
 
-# Baixa e instala o code-server
-RUN curl -fsSL https://code-server.dev/install.sh | sh
+# Cria um usuário "ubuntu"
+RUN useradd -m -s /bin/bash ubuntu && \
+    echo "ubuntu ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# Troca para o novo usuário
+USER ubuntu
 
 # Define o diretório de trabalho para os projetos
-WORKDIR /root/projects
+WORKDIR /home/ubuntu/projects
 
-# Copia o arquivo de configuração do code-server para o local padrão
-COPY config.yaml /root/.config/code-server/config.yaml
+# Baixa e instala o code-server (agora como usuário ubuntu)
+RUN curl -fsSL https://code-server.dev/install.sh | sh
 
-# Expõe a porta code-server
+# Copia o arquivo de configuração para o local adequado
+COPY --chown=ubuntu:ubuntu config.yaml /home/ubuntu/.config/code-server/config.yaml
+
+# Expõe a porta do code-server
 EXPOSE 4277
 
 # Comando para iniciar o code-server
